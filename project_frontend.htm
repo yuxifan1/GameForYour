@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Games for You</title>
+</head>
+<body>
+
+<h1>Games for You</h1>
+
+<p>Directions: Enter a username, and we will recommend you games and bundles you might like.</p>
+
+<form action="http://localhost:8080/recommendations" method="POST">
+  Username: <input type="text" name="username"><br><br>
+ <button type="submit">Submit request</button>
+</form>
+
+<p>The following text box is to process a raw SQL query for development purposes.<br>However, most of the MySQL database was imported from a Steam games .csv.</p>
+
+<form action="http://localhost:8080/sql" method="POST">
+  SQLQuery: <input type="text" name="sqlquery"><br><br>
+ <button type="submit">Submit SQL Query</button>
+</form>
+
+<p>The following text box is to create/update a user in the MongoDB database (create a new user, or insert a new game by steam id for them).<br>This will be handled by SteamAPI in the future.</p>
+
+<form action="http://localhost:8080/mongo" method="POST">
+  MongoUsername: <input type="text" name="mongousername"><br>
+  MongoGameID: <input type="text" name="mongogameid"><br><br>
+ <button type="submit">Submit Mongo Insert</button>
+</form>
+
+</body>
+</html>
