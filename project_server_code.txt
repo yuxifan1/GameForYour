@@ -53,24 +53,30 @@ app.post('/recommendations', (req, res) => {
       dbo.collection("players").findOne({name:req.body.username}, function(err, result) {
 
         if (err) throw err;
-        requested_user = result.name;
-	requested_user_games = result.games;
 
-        var buf = "<h1>" + requested_user + ", based on these games...</h1>";
+	if (!result) {
+	  res.send("Record with name " + req.body.username + " does not exist.");
+	} else {
 
-	get_games_string(result, function(tempbuf) {
-	  buf = buf + tempbuf;
-          buf = buf + "<h1>We recommend these games...</h1>";
-	  console.log("BUF POST FUNCTION CALL:" + buf);
+          requested_user = result.name;
+  	  requested_user_games = result.games;
 
-      	  con.query("SELECT name, publisher FROM games WHERE name LIKE 'Call of Duty%'", function (err, result) {
-            if (err) throw err;
-            for (var i = 0; i < result.length; i++) {
-              buf = buf + result[i].name + "<br>";
-            }
-	    res.send(buf);	
-          });
-	});
+          var buf = "<h1>" + requested_user + ", based on these games...</h1>";
+
+	  get_games_string(result, function(tempbuf) {
+	    buf = buf + tempbuf;
+            buf = buf + "<h1>We recommend these games...</h1>";
+	    console.log("BUF POST FUNCTION CALL:" + buf);
+
+      	    con.query("SELECT name, publisher FROM games WHERE name LIKE 'Call of Duty%'", function (err, result) {
+              if (err) throw err;
+              for (var i = 0; i < result.length; i++) {
+                buf = buf + result[i].name + "<br>";
+              }
+	      res.send(buf);	
+            });
+	  });
+        }
 
       });
 
@@ -120,6 +126,29 @@ app.post('/mongo', (req, res) => {
 
 });
 
+// Test raw Mongo deletes
+app.post('/mongodelete', (req, res) => {
+
+    MongoClient.connect(url, function(err, db) {
+      if (err) throw err;
+
+      var dbo = db.db("Players");
+      console.log("Connected to MongoDB");
+
+      dbo.collection("players").deleteOne({name:req.body.mongousernamedelete}, function(err, result) {
+
+        if (err) throw err;
+        if (result.deletedCount == 0) {
+          res.send("Record with name " + req.body.mongousernamedelete + " does not exist.");
+        } else {
+	  res.send("Successfully deleted record.");
+        }
+
+      });
+
+    });
+
+});
 
 const port = 8080;
 
