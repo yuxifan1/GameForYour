@@ -9,16 +9,17 @@
 <div class="form-box">
     <div class="button-box">
         <div id="btn"></div>
-        <button type="button" class="toggle-btn" onclick="login()">Insert</button>
-        <button type="button" class="toggle-btn" onclick="register()">Delete</button>
+        <button type="button" class="toggle-btn" onclick="insert()">Insert</button>
+        <button type="button" class="toggle-btn" onclick="Delete()">Delete</button>
     </div>
     
-    <form id="login" class="input-group">
+    <form id="insert" class="input-group">
         <input type="text" class="input-field" placeholder="User Id" required>
         <input type="text" class="input-field" placeholder="Game Id" required>
         <button type="submit" class="submit-btn">Insert</button>
     </form>
-    <form id="register" class="input-group">
+    
+    <form id="Delete" class="input-group">
         <input type="text" class="input-field" placeholder="User Id" required>
         <button type="submit" class="submit-btn">Delete</button>
     </form>
@@ -30,16 +31,16 @@
     /*click effect*/
     
     <script>
-    var x = document.getElementById("login");
-    var y = document.getElementById("register");
+    var x = document.getElementById("insert");
+    var y = document.getElementById("Delete");
     var z = document.getElementById("btn");
     
-    function register(){
+    function Delete(){
         x.style.left = "-400px";
         y.style.left = "50px";
         z.style.left = "110px";
     }
-    function login(){
+    function insert(){
         x.style.left = "50px";
         y.style.left = "450px";
         z.style.left = "0";
