@@ -14,14 +14,23 @@
     <button  class="login-btn"  onclick="location.href='profile.html'" type="button">
          Create your profile</button>
     </div>
-        
+<form action="http://localhost:8080/recommendations" method="POST">
 <h1>Games For You</h1>
 <div class="input-group">
-    <input type="text" class="form-control" placeholder="Search you favourite games">
+    <input type="text" name="username" class="form-control" placeholder="Enter Steam Community URL">
+      <select name="priority">
+	<option value="" disabled selected>Prioritize...</option>
+        <option value="popularity">Popularity</option>
+        <option value="friends">Friends List</option>
+        <option value="genre">Genre</option>
+        <option value="developer">Developer</option>
+        <option value="price">Price</option>
+      </select><br><br>
     <div class="input-group-append">
     <button type="submit" class="input-group-text btn">Search</button>    
     </div>
 </div>
+</form>
 </section>  
 
     
