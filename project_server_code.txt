@@ -6,12 +6,77 @@ const MongoClient = require('mongodb').MongoClient;
 const url = "mongodb://localhost:27017/";
 app.use(bodyParser.urlencoded({ extended: true })); 
 
+// Queries for use later
+// The left join stuff is basically a way to do MINUS in MySQL since it doesn't support minus; subtract off the games the user already has for purposes of recommending new ones
+const POPULARITY_QUERY = `SELECT t1.appid, t1.name, t1.developer, t1.publisher, t1.genres, t1.positive_ratings, t1.negative_ratings, t1.average_playtime, t1.median_playtime, t1.owners, t1.price, t1.positive_ratings + t1.negative_ratings AS s
+                          FROM (SELECT appid, name, developer, publisher, genres, positive_ratings, negative_ratings, average_playtime, median_playtime, owners, price FROM games_final) AS t1 
+                          LEFT JOIN (SELECT games_final.appid, games_final.name, games_final.developer, games_final.publisher, games_final.genres, games_final.positive_ratings, 
+			             games_final.negative_ratings, games_final.average_playtime, games_final.median_playtime, games_final.owners, games_final.price 
+                                     FROM (SELECT * FROM played_game WHERE played_game.steam_id = ?) AS t2
+                                     JOIN games_final ON t2.appid = games_final.appid) AS t3
+                          ON t1.appid = t3.appid
+                          WHERE t3.appid IS NULL AND t1.genres LIKE ? AND t1.positive_ratings + t1.negative_ratings >= 3000 AND t1.price != 0.00
+		          ORDER BY s DESC
+                          LIMIT 15;`;
+
+const GENRE_QUERY = `SELECT t1.appid, t1.name, t1.developer, t1.publisher, t1.genres, t1.positive_ratings, t1.negative_ratings, t1.average_playtime, t1.median_playtime, t1.owners, t1.price, t1.positive_ratings + t1.negative_ratings AS s
+                     FROM (SELECT appid, name, developer, publisher, genres, positive_ratings, negative_ratings, average_playtime, median_playtime, owners, price FROM games_final) AS t1 
+                     LEFT JOIN (SELECT games_final.appid, games_final.name, games_final.developer, games_final.publisher, games_final.genres, games_final.positive_ratings, 
+			        games_final.negative_ratings, games_final.average_playtime, games_final.median_playtime, games_final.owners, games_final.price 
+                                FROM (SELECT * FROM played_game WHERE played_game.steam_id = ?) AS t2
+                                JOIN games_final ON t2.appid = games_final.appid) AS t3
+                     ON t1.appid = t3.appid
+                     WHERE t3.appid IS NULL AND t1.genres LIKE ? AND t1.positive_ratings / t1.negative_ratings >= 3 AND t1.positive_ratings + t1.negative_ratings >= 2000 AND t1.price != 0.00
+		     ORDER BY s DESC
+                     LIMIT 15;`;
+
+const DEVELOPER_QUERY = `SELECT t1.appid, t1.name, t1.developer, t1.publisher, t1.genres, t1.positive_ratings, t1.negative_ratings, t1.average_playtime, t1.median_playtime, t1.owners, t1.price, t1.positive_ratings + t1.negative_ratings AS s
+                         FROM (SELECT appid, name, developer, publisher, genres, positive_ratings, negative_ratings, average_playtime, median_playtime, owners, price FROM games_final) AS t1 
+                         LEFT JOIN (SELECT games_final.appid, games_final.name, games_final.developer, games_final.publisher, games_final.genres, games_final.positive_ratings, 
+			            games_final.negative_ratings, games_final.average_playtime, games_final.median_playtime, games_final.owners, games_final.price 
+                                    FROM (SELECT * FROM played_game WHERE played_game.steam_id = ?) AS t2
+                                    JOIN games_final ON t2.appid = games_final.appid) AS t3
+                         ON t1.appid = t3.appid
+                         WHERE t3.appid IS NULL AND t1.developer LIKE ?
+		         ORDER BY s DESC
+                         LIMIT 15;`;
+
+const FRIEND_QUERY = `SELECT t3.appid, t3.c, t3.name, t3.genres, t3.price
+                      FROM (SELECT games_final.appid, c, games_final.name, games_final.genres, games_final.price 
+	                    FROM (SELECT t1.appid, COUNT(t1.appid) AS c
+			          FROM (SELECT played_game.steam_id, played_game.appid
+				        FROM friends_with
+				        JOIN played_game
+				        ON friends_with.friend_id = played_game.steam_id
+				        WHERE friends_with.steam_id = ?) AS t1
+			          GROUP BY t1.appid) AS t2
+	                    JOIN games_final
+	                    ON t2.appid = games_final.appid) AS t3 
+                      LEFT JOIN (SELECT games_final.appid, games_final.name, games_final.developer, games_final.publisher, games_final.genres, games_final.positive_ratings, 
+		                 games_final.negative_ratings, games_final.average_playtime, games_final.median_playtime, games_final.owners, games_final.price 
+		                 FROM (SELECT * FROM played_game WHERE played_game.steam_id = ?) AS t4
+		                 JOIN games_final ON t4.appid = games_final.appid) AS t5
+                      ON t3.appid = t5.appid
+                      WHERE t5.appid IS NULL 
+                      ORDER BY c DESC
+                      LIMIT 15;`;
+
+const PRICE_QUERY = `SELECT t1.appid, t1.name, t1.developer, t1.publisher, t1.genres, t1.positive_ratings, t1.negative_ratings, t1.average_playtime, t1.median_playtime, t1.owners, t1.price, t1.positive_ratings + t1.negative_ratings AS s
+                     FROM (SELECT appid, name, developer, publisher, genres, positive_ratings, negative_ratings, average_playtime, median_playtime, owners, price FROM games_final) AS t1 
+                     LEFT JOIN (SELECT games_final.appid, games_final.name, games_final.developer, games_final.publisher, games_final.genres, games_final.positive_ratings, 
+			        games_final.negative_ratings, games_final.average_playtime, games_final.median_playtime, games_final.owners, games_final.price 
+                                FROM (SELECT * FROM played_game WHERE played_game.steam_id = ?) AS t2
+                                JOIN games_final ON t2.appid = games_final.appid) AS t3
+                     ON t1.appid = t3.appid
+                     WHERE t3.appid IS NULL AND t1.genres LIKE ? AND t1.positive_ratings / t1.negative_ratings >= 3 AND t1.positive_ratings + t1.negative_ratings >= 2000 AND t1.price != 0.00 AND t1.price < 10
+		     ORDER BY s DESC
+                     LIMIT 15;`;
 
 // Connect to MySQL database
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "password",
+  password: "REDACTED",
   database: "steam_games"
 });
 con.connect(function(err) {
@@ -19,18 +84,23 @@ con.connect(function(err) {
   console.log("Connected to MySQL");
 });
 
+// Setup steam key
+const SteamAPI = require("steamapi");
+const steam = new SteamAPI("REDACTED");
 
 // return html buffer of player_info -> game id's to steam game strings
 function get_games_string(player_info, callback) {
   var buf = "";
   var count = 0;
-  for (var i = 0; i < player_info.games.length; i++) {
+  var tot = Math.min(15, player_info.games.length);
+  for (var i = 0; i < tot; i++) {
     gameid = player_info.games[i];
-    con.query("SELECT name FROM games WHERE appid = ?;", gameid, function(err, result) {
+    con.query("SELECT name FROM games_final WHERE appid = ?;", gameid, function(err, result) {
       if (err) throw err;  
-      buf = buf + result[0].name + "<br>";
-      if (count == player_info.games.length - 1) {
-        console.log("RETURNING BUF VAL:" + buf);
+      if (result.length != 0) { 
+        buf = buf + result[0].name + "<br>";
+      } 
+      if (count == tot - 1) {
 	callback(buf);
       }
       count = count + 1;
@@ -38,64 +108,424 @@ function get_games_string(player_info, callback) {
   }
 };
 
-// Main recommendation logic
-app.post('/recommendations', (req, res) => {
+// insert steam_id and appid into many -> many played_game table
+function insert_played_games(steam_id, games, callback) {
+  var count = 0;
+  var appids = [];
+  for (var i = 0; i < games.length; i++) {
+    var appid = games[i].appID;
+    appids.push(appid);
+    con.query("INSERT INTO played_game VALUES (?, ?);", [steam_id, appid], function(err, result) {
+      if (err) throw err;  
+      if (count == games.length - 1) {
+	callback(appids);
+      }
+      count = count + 1;
+    });
+  }
+};
 
-    requested_user = "";
-    requested_user_games = [];
+// insert steam_id and friend_ids into many -> many friends_with table
+function insert_friends(steam_id, friends_list, callback) {
+  var count = 0;
+  for (var i = 0; i < friends_list.length; i++) {
+    var friend_id = friends_list[i].steamID;
+    con.query("INSERT INTO friends_with VALUES (?, ?);", [steam_id, friend_id], function(err, result) {
+      if (err) throw err;  
+      if (count == friends_list.length - 1) {
+	callback();
+      }
+      count = count + 1;
+    });
+  }
+};
 
-    MongoClient.connect(url, function(err, db) {
-      if (err) throw err;
+// insert_played_games for each friend
+function insert_friends_played_games_recursion(friends_list, idx, callback) {
 
-      var dbo = db.db("Players");
-      console.log("Connected to MongoDB");
+  if (idx == friends_list.length) {
+    callback();
+  } else { 
+    var friend_id = friends_list[idx].steamID;
+    steam.getUserOwnedGames(friend_id).then(games => {
+      insert_played_games(friend_id, games, function(appids) {
+          insert_friends_played_games_recursion(friends_list, idx + 1, callback);
+      });
+    }).catch(function(error) {
+               insert_friends_played_games_recursion(friends_list, idx + 1, callback);
+             });
+  }
+};
 
-      dbo.collection("players").findOne({name:req.body.username}, function(err, result) {
+// Calculate the most common genre (not counting action and indie) from given games excluding the genres in exclude
+function mode_of_game_array(games, exclude, callback) {
+  var genre_count = {}
+  for (var i = 0; i < games.length; i++) {
+    var game_genres = games[i].genres;
+    var genres_array = game_genres.split(";");
+    for (var j = 0; j < genres_array.length; j++) {
+      if (!(genres_array[j] in genre_count)) {
+        genre_count[genres_array[j]] = 1;
+      } else {
+        genre_count[genres_array[j]] = genre_count[genres_array[j]] + 1;
+      }
+    }
+  }
+  var maxval = 0
+  var genre = "";
+  for (key in genre_count) {
+    if (genre_count[key] > maxval && !(exclude.includes(key)) && key != "Action" && key != "Indie" && key != "Adventure") {
+      maxval = genre_count[key];
+      genre = key;
+    }
+  }
+  callback(genre);
+}
 
-        if (err) throw err;
+// Calculate the most common developer from given games excluding the devs in exclude
+function mode_of_game_array_dev(games, exclude, callback) {
+  var dev_count = {}
+  for (var i = 0; i < games.length; i++) {
+    var game_devs = games[i].developer;
+    var devs_array = game_devs.split(";");
+    for (var j = 0; j < devs_array.length; j++) {
+      if (!(devs_array[j] in dev_count)) {
+        dev_count[devs_array[j]] = 1;
+      } else {
+        dev_count[devs_array[j]] = dev_count[devs_array[j]] + 1;
+      }
+    }
+  }
+  var maxval = 0
+  var dev = "";
+  for (key in dev_count) {
+    if (dev_count[key] > maxval && !(exclude.includes(key))) {
+      maxval = dev_count[key];
+      dev = key;
+    }
+  }
+  callback(dev);
+}
 
-	if (!result) {
-	  res.send("Record with name " + req.body.username + " does not exist.");
-	} else {
+// Given a mongo user and recommendation priority, write back data to the user
+function write_back_to_user(user_data, priority, to_send, nickname, id) {
 
-          requested_user = result.name;
-  	  requested_user_games = result.games;
+  requested_user = user_data.name;
+  requested_user_games = user_data.games;
+  
+  if (priority == "friends") {
 
-          var buf = "<h1>" + requested_user + ", based on these games...</h1>";
-
-	  get_games_string(result, function(tempbuf) {
-	    buf = buf + tempbuf;
-            buf = buf + "<h1>We recommend these games...</h1>";
-	    console.log("BUF POST FUNCTION CALL:" + buf);
-
-      	    con.query("SELECT name, publisher FROM games WHERE name LIKE 'Call of Duty%'", function (err, result) {
-              if (err) throw err;
-              for (var i = 0; i < result.length; i++) {
-                buf = buf + result[i].name + "<br>";
+    var buf = "";
+    con.query(FRIEND_QUERY, [id, id], function (err, result) {
+      if (result.length == 0) {
+        to_send.send("<h1>We're sorry, but this user is either private or has no public friends on their friends list.</h1>");
+      } else {
+        buf = buf + "<h1>We recommend these games that are popular among your friends.</h1>";
+        for (var i = 0; i < result.length; i++) {
+          buf = buf + "<b>" + result[i].name + "</b> is a ";
+          var list_of_genres = result[i].genres.split(";");
+          if (list_of_genres.length == 1) {
+            buf = buf + list_of_genres[0] + " game, and is priced at $" + result[i].price + ".<br>"
+          } else {
+            for (var j = 0; j < list_of_genres.length; j++) {
+              if (j == list_of_genres.length - 1) {
+                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result[i].price + ".<br>"
+                break;
               }
-	      res.send(buf);	
+              buf = buf + list_of_genres[j] + ", "
+            } 
+          }               
+        }
+        to_send.send(buf);
+      }
+    });
+
+  } else {
+
+    var buf = "<h1>" + nickname + ", based on some of these games...</h1>";
+ 
+    get_games_string(user_data, function(tempbuf) {
+      buf = buf + tempbuf;
+
+      switch (priority) {
+
+        case "popularity":
+    	  buf = buf + "<h1>We recommend these popular games.</h1>";
+	  // First we get the average genre of game the user plays and query based on containing this genre
+	  con.query("SELECT genres FROM played_game JOIN games_final ON played_game.appid = games_final.appid WHERE played_game.steam_id = ?", id, function (err, result) {
+	    mode_of_game_array(result, [], function(genre) {
+              con.query(POPULARITY_QUERY, [id, "%" + genre + "%"], function (err, result2) {
+                for (var i = 0; i < result2.length; i++) {
+                  buf = buf + "<b>" + result2[i].name + "</b> is a ";
+                  var list_of_genres = result2[i].genres.split(";");
+                  if (list_of_genres.length == 1) {
+                    buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ".<br>"
+                  } else {
+                    for (var j = 0; j < list_of_genres.length; j++) {
+                      if (j == list_of_genres.length - 1) {
+                        buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ".<br>"
+                        break;
+                      }
+                      buf = buf + list_of_genres[j] + ", "
+                    } 
+                  }               
+                }
+                to_send.send(buf);
+	      });
             });
 	  });
-        }
-
-      });
+	  break;
+        case "genre":
+	  // We want to get the three top genres and find results from these genres
+	  con.query("SELECT genres FROM played_game JOIN games_final ON played_game.appid = games_final.appid WHERE played_game.steam_id = ?", id, function (err, result) {
+	    mode_of_game_array(result, [], function(genre_1) {
+	      mode_of_game_array(result, [genre_1], function(genre_2) {
+	        mode_of_game_array(result, [genre_1, genre_2], function(genre_3) {
+                  con.query(GENRE_QUERY, [id, "%" + genre_1 + "%"], function (err, result2) {
+		    buf = buf + "<h1>If you're looking for " + genre_1 + " games, you should look into these games.</h1>";
+                    for (var i = 0; i < result2.length; i++) {
+                      buf = buf + "<b>" + result2[i].name + "</b> is a ";
+                      var list_of_genres = result2[i].genres.split(";");
+                      if (list_of_genres.length == 1) {
+                        buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ".<br>"
+                      } else {
+                        for (var j = 0; j < list_of_genres.length; j++) {
+                          if (j == list_of_genres.length - 1) {
+                            buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ".<br>"
+                            break;
+                          }
+                          buf = buf + list_of_genres[j] + ", "
+                        } 
+                      } 
+                    }                              
+                    con.query(GENRE_QUERY, [id, "%" + genre_2 + "%"], function (err, result3) {
+		      buf = buf + "<h1>If you're looking for " + genre_2 + " games, you should look into these games.</h1>";
+                      for (var i = 0; i < result3.length; i++) {
+                        buf = buf + "<b>" + result3[i].name + "</b> is a ";
+                        var list_of_genres = result3[i].genres.split(";");
+                        if (list_of_genres.length == 1) {
+                          buf = buf + list_of_genres[0] + " game, and is priced at $" + result3[i].price + ".<br>"
+                        } else {
+                          for (var j = 0; j < list_of_genres.length; j++) {
+                            if (j == list_of_genres.length - 1) {
+                              buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result3[i].price + ".<br>"
+                              break;
+                            }
+                            buf = buf + list_of_genres[j] + ", "
+                          }  
+                        }
+                      }                               
+                      con.query(GENRE_QUERY, [id, "%" + genre_3 + "%"], function (err, result4) {
+		        buf = buf + "<h1>If you're looking for " + genre_3 + " games, you should look into these games.</h1>";
+                        for (var i = 0; i < result4.length; i++) {
+                          buf = buf + "<b>" + result4[i].name + "</b> is a ";
+                          var list_of_genres = result4[i].genres.split(";");
+                          if (list_of_genres.length == 1) {
+                            buf = buf + list_of_genres[0] + " game, and is priced at $" + result4[i].price + ".<br>"
+                          } else {
+                            for (var j = 0; j < list_of_genres.length; j++) {
+                              if (j == list_of_genres.length - 1) {
+                                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result4[i].price + ".<br>"
+                                break;
+                              }
+                              buf = buf + list_of_genres[j] + ", "
+                            }  
+                          }
+                        }
+                        to_send.send(buf)
+		      });
+		    });
+		  });
+	        });
+	      });
+	    });
+	  });
+          break;
+        case "developer":
+          con.query("SELECT developer FROM played_game JOIN games_final ON played_game.appid = games_final.appid WHERE played_game.steam_id = ?", id, function (err, result) {
+	    mode_of_game_array_dev(result, [], function(dev_1) {
+	      mode_of_game_array_dev(result, [dev_1], function(dev_2) {
+	        mode_of_game_array_dev(result, [dev_1, dev_2], function(dev_3) {
+                  con.query(DEVELOPER_QUERY, [id, "%" + dev_1 + "%"], function (err, result2) {
+		    buf = buf + "<h1>If you're looking for more games by " + dev_1 + ", you should look into these games.</h1>";
+                    for (var i = 0; i < result2.length; i++) {
+                      buf = buf + "<b>" + result2[i].name + "</b> is a ";
+                      var list_of_genres = result2[i].genres.split(";");
+                      if (list_of_genres.length == 1) {
+                        buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ".<br>"
+                      } else {
+                        for (var j = 0; j < list_of_genres.length; j++) {
+                          if (j == list_of_genres.length - 1) {
+                            buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ".<br>"
+                            break;
+                          }
+                          buf = buf + list_of_genres[j] + ", "
+                        }  
+                      }
+                    } 
+                    con.query(DEVELOPER_QUERY, [id, "%" + dev_2 + "%"], function (err, result3) {
+		      buf = buf + "<h1>If you're looking for more games by " + dev_2 + ", you should look into these games.</h1>";
+                      for (var i = 0; i < result3.length; i++) {
+                        buf = buf + "<b>" + result3[i].name + "</b> is a ";
+                        var list_of_genres = result3[i].genres.split(";");
+                        if (list_of_genres.length == 1) {
+                          buf = buf + list_of_genres[0] + " game, and is priced at $" + result3[i].price + ".<br>"
+                        } else {
+                          for (var j = 0; j < list_of_genres.length; j++) {
+                            if (j == list_of_genres.length - 1) {
+                              buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result3[i].price + ".<br>"
+                              break;
+                            }
+                            buf = buf + list_of_genres[j] + ", "
+                          }  
+                        }
+                      } 
+                      con.query(DEVELOPER_QUERY, [id, "%" + dev_3 + "%"], function (err, result4) {
+		        buf = buf + "<h1>If you're looking for more games by " + dev_3 + ", you should look into these games.</h1>";
+                        for (var i = 0; i < result4.length; i++) {
+                          buf = buf + "<b>" + result4[i].name + "</b> is a ";
+                          var list_of_genres = result4[i].genres.split(";");
+                          if (list_of_genres.length == 1) {
+                            buf = buf + list_of_genres[0] + " game, and is priced at $" + result4[i].price + ".<br>"
+                          } else {
+                            for (var j = 0; j < list_of_genres.length; j++) {
+                              if (j == list_of_genres.length - 1) {
+                                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result4[i].price + ".<br>"
+                                break;
+                              }
+                              buf = buf + list_of_genres[j] + ", "
+                            }  
+                          }
+                        }
+                        to_send.send(buf)
+		      });
+		    });
+		  });
+	        });
+	      });
+	    });
+	  });
+          break;
+        case "price":
+          buf = buf + "<h1>We recommend these cheaper games.</h1>";
+	  con.query("SELECT genres FROM played_game JOIN games_final ON played_game.appid = games_final.appid WHERE played_game.steam_id = ?", id, function (err, result) {
+	    mode_of_game_array(result, [], function(genre) {
+              con.query(PRICE_QUERY, [id, "%" + genre + "%"], function (err, result2) {
+                for (var i = 0; i < result2.length; i++) {
+                  buf = buf + "<b>" + result2[i].name + "</b> is a ";
+                  var list_of_genres = result2[i].genres.split(";");
+                  if (list_of_genres.length == 1) {
+                    buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ".<br>"
+                  } else {
+                    for (var j = 0; j < list_of_genres.length; j++) {
+                      if (j == list_of_genres.length - 1) {
+                        buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ".<br>"
+                        break;
+                      }
+                      buf = buf + list_of_genres[j] + ", "
+                    }   
+                  }             
+                }
+                to_send.send(buf);
+	      });
+            });
+	  });
+	  break;
+        default:
+          con.query("SELECT name, publisher FROM games_final WHERE name LIKE 'Call of Duty%'", function (err, result) {
+            if (err) throw err;
+            for (var i = 0; i < result.length; i++) {
+              buf = buf + result[i].name + "<br>";
+            }
+            to_send.send(buf);	
+          });
+          break;
+      }
 
     });
+
+  }
+	   
+}
+
+// Main server logic
+app.post('/recommendations', (req, res) => {
+
+  requested_user = "";
+  requested_user_games = [];
+
+  MongoClient.connect(url, function(err, db) {
+    if (err) throw err;
+
+    var dbo = db.db("Players");
+
+    dbo.collection("players").findOne({name:req.body.username}, function(err, result) {
+
+      if (err) throw err;
+
+      if (!result) { // Call the Steam API, update Mongo and MySQL
+
+	steam.resolve(req.body.username).then(id => {
+          steam.getUserOwnedGames(id).then(games => {
+	    insert_played_games(id, games, function(appids) {
+              steam.getUserSummary(id).then(summary => {
+                steam.getUserFriends(id).then(friends => {
+                  insert_friends(id, friends, function() {
+                    insert_friends_played_games_recursion(friends, 0, function() {
+                      dbo.collection("players").insertOne({name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname});
+	              result = {name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname};
+                      write_back_to_user(result, req.body.priority, res, summary.nickname, id);
+                    });
+                  });
+                }).catch(function(error) {
+                           dbo.collection("players").insertOne({name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname});
+	                   result = {name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname};
+                           write_back_to_user(result, req.body.priority, res, summary.nickname, id);
+                         }); 
+              });
+	    });
+	  }).catch(function(error) {
+                     res.send("<h1>Sorry, the requested user has their profile set to private.</h1>");
+                   }); 
+	});
+
+      } else {
+
+        write_back_to_user(result, req.body.priority, res, result.nickname, result.steam_id);
+
+      }
+
+    });
+
+  });
 
 });
 
 
-// Test raw SQL query input
+
+
+//
+// For testing on demo 1 build.
+//
+// 
+// Mongo account management still works in final build but pointless.
+// Raw SQL queries don't work anymore.
+//
+
+
+
+
+// Test raw SQL query input - NO PATH TO THIS ANYMORE
 app.post('/sql', (req, res) => {
 
-    con.query(req.body.sqlquery, function (err, result) {
-      if (err) throw err;
-      var buf = ""
-      for (var i = 0; i < result.length; i++) {
-        buf = buf + result[i].name + "<br>";
-      }
-      res.send(buf);	
-    });
+  con.query(req.body.sqlquery, function (err, result) {
+    if (err) throw err;
+    var buf = ""
+    for (var i = 0; i < result.length; i++) {
+      buf = buf + result[i].name + "<br>";
+    }
+    res.send(buf);	
+  });
 
 });
 
@@ -103,55 +533,53 @@ app.post('/sql', (req, res) => {
 // Test raw Mongo input
 app.post('/mongo', (req, res) => {
 
-    MongoClient.connect(url, function(err, db) {
+  MongoClient.connect(url, function(err, db) {
+    if (err) throw err;
+
+    var dbo = db.db("Players");
+
+    dbo.collection("players").findOne({name:req.body.mongousername, steam_id:req.body.mongosteamid, nickname:req.body.mongonickname}, function(err, result) {
+
       if (err) throw err;
-
-      var dbo = db.db("Players");
-      console.log("Connected to MongoDB");
-
-      dbo.collection("players").findOne({name:req.body.mongousername}, function(err, result) {
-
-        if (err) throw err;
-        if (!result) {
-	  dbo.collection("players").insertOne({name:req.body.mongousername, games:[parseInt(req.body.mongogameid)]});
-          res.send("Successfully inserted record.");
-        } else {
-	  dbo.collection("players").updateOne(result, {$addToSet:{games:parseInt(req.body.mongogameid)}});
-	  res.send("Successfully updated record.");
-        }
-
-      });
+      if (!result) {
+        dbo.collection("players").insertOne({name:req.body.mongousername, steam_id:req.body.mongosteamid, games:[parseInt(req.body.mongogameid)], nickname:req.body.mongonickname});
+        res.send("Successfully created record.");
+      } else {
+	dbo.collection("players").updateOne(result, {$addToSet:{games:parseInt(req.body.mongogameid)}});
+        res.send("Successfully updated record.");
+      }
 
     });
+
+  });
 
 });
 
 // Test raw Mongo deletes
 app.post('/mongodelete', (req, res) => {
 
-    MongoClient.connect(url, function(err, db) {
+  MongoClient.connect(url, function(err, db) {
+    if (err) throw err;
+
+    var dbo = db.db("Players");
+
+    dbo.collection("players").deleteOne({name:req.body.mongousernamedelete}, function(err, result) {
+
       if (err) throw err;
-
-      var dbo = db.db("Players");
-      console.log("Connected to MongoDB");
-
-      dbo.collection("players").deleteOne({name:req.body.mongousernamedelete}, function(err, result) {
-
-        if (err) throw err;
-        if (result.deletedCount == 0) {
-          res.send("Record with name " + req.body.mongousernamedelete + " does not exist.");
-        } else {
-	  res.send("Successfully deleted record.");
-        }
-
-      });
+      if (result.deletedCount == 0) {
+        res.send("Record with name " + req.body.mongousernamedelete + " does not exist.");
+      } else {
+        res.send("Successfully deleted record.");
+      }
 
     });
+
+  });
 
 });
 
 const port = 8080;
 
 app.listen(port, () => {
-  console.log(`Server running on port${port}`);
+  console.log(`Server running on port ${port}`);
 });
