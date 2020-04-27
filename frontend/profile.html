@@ -9,18 +9,19 @@
 <div class="form-box">
     <div class="button-box">
         <div id="btn"></div>
-        <button type="button" class="toggle-btn" onclick="insert()">Insert</button>
-        <button type="button" class="toggle-btn" onclick="Delete()">Delete</button>
+        <button type="button" class="toggle-btn" onclick="login()">Insert</button>
+        <button type="button" class="toggle-btn" onclick="register()">Delete</button>
     </div>
     
-    <form id="insert" class="input-group">
-        <input type="text" class="input-field" placeholder="User Id" required>
-        <input type="text" class="input-field" placeholder="Game Id" required>
+    <form id="login" class="input-group" action="http://localhost:8080/mongo" method="POST">
+        <input type="text" name="mongousername" class="input-field" placeholder="Steam Community URL" required>
+        <input type="text" name="mongogameid" class="input-field" placeholder="App Id" required>
+        <input type="text" name="mongonickname" class="input-field" placeholder="Nickname" required>
+        <input type="text" name="mongosteamid" class="input-field" placeholder="Steam Id" required>
         <button type="submit" class="submit-btn">Insert</button>
     </form>
-    
-    <form id="Delete" class="input-group">
-        <input type="text" class="input-field" placeholder="User Id" required>
+    <form id="register" class="input-group" action="http://localhost:8080/mongodelete" method="POST">
+        <input type="text" name="mongousernamedelete" class="input-field" placeholder="Steam Community URL" required>
         <button type="submit" class="submit-btn">Delete</button>
     </form>
 
@@ -31,16 +32,16 @@
     /*click effect*/
     
     <script>
-    var x = document.getElementById("insert");
-    var y = document.getElementById("Delete");
+    var x = document.getElementById("login");
+    var y = document.getElementById("register");
     var z = document.getElementById("btn");
     
-    function Delete(){
+    function register(){
         x.style.left = "-400px";
         y.style.left = "50px";
         z.style.left = "110px";
     }
-    function insert(){
+    function login(){
         x.style.left = "50px";
         y.style.left = "450px";
         z.style.left = "0";
