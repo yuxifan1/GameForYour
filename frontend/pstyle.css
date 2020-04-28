@@ -90,10 +90,11 @@ span{
     bottom: 68px;
     position: absolute;
 }
-#Insert{
+
+#login{
     left: 50px;
 }
-#Delete{
+#register{
     left: 450px;
 }
 
