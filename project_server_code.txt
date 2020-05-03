@@ -174,7 +174,7 @@ function mode_of_game_array(games, exclude, callback) {
   var maxval = 0
   var genre = "";
   for (key in genre_count) {
-    if (genre_count[key] > maxval && !(exclude.includes(key)) && key != "Action" && key != "Indie" && key != "Adventure") {
+    if (genre_count[key] > maxval && !(exclude.includes(key)) && key != "Action" && key != "Indie" && key != "Adventure" && key != "Free to Play") {
       maxval = genre_count[key];
       genre = key;
     }
@@ -225,11 +225,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
           buf = buf + "<b>" + result[i].name + "</b> is a ";
           var list_of_genres = result[i].genres.split(";");
           if (list_of_genres.length == 1) {
-            buf = buf + list_of_genres[0] + " game, and is priced at $" + result[i].price + ".<br>"
+            buf = buf + list_of_genres[0] + " game, and is priced at $" + result[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result[i].appid + "/\">Store Page</a>)<br>"
           } else {
             for (var j = 0; j < list_of_genres.length; j++) {
               if (j == list_of_genres.length - 1) {
-                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result[i].price + ".<br>"
+                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result[i].appid + "/\">Store Page</a>)<br>";
                 break;
               }
               buf = buf + list_of_genres[j] + ", "
@@ -259,11 +259,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
                   buf = buf + "<b>" + result2[i].name + "</b> is a ";
                   var list_of_genres = result2[i].genres.split(";");
                   if (list_of_genres.length == 1) {
-                    buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ".<br>"
+                    buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result2[i].appid + "/\">Store Page</a>)<br>"
                   } else {
                     for (var j = 0; j < list_of_genres.length; j++) {
                       if (j == list_of_genres.length - 1) {
-                        buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ".<br>"
+                        buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result2[i].appid + "/\">Store Page</a>)<br>"
                         break;
                       }
                       buf = buf + list_of_genres[j] + ", "
@@ -287,11 +287,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
                       buf = buf + "<b>" + result2[i].name + "</b> is a ";
                       var list_of_genres = result2[i].genres.split(";");
                       if (list_of_genres.length == 1) {
-                        buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ".<br>"
+                        buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result2[i].appid + "/\">Store Page</a>)<br>"
                       } else {
                         for (var j = 0; j < list_of_genres.length; j++) {
                           if (j == list_of_genres.length - 1) {
-                            buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ".<br>"
+                            buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result2[i].appid + "/\">Store Page</a>)<br>"
                             break;
                           }
                           buf = buf + list_of_genres[j] + ", "
@@ -304,11 +304,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
                         buf = buf + "<b>" + result3[i].name + "</b> is a ";
                         var list_of_genres = result3[i].genres.split(";");
                         if (list_of_genres.length == 1) {
-                          buf = buf + list_of_genres[0] + " game, and is priced at $" + result3[i].price + ".<br>"
+                          buf = buf + list_of_genres[0] + " game, and is priced at $" + result3[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result3[i].appid + "/\">Store Page</a>)<br>"
                         } else {
                           for (var j = 0; j < list_of_genres.length; j++) {
                             if (j == list_of_genres.length - 1) {
-                              buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result3[i].price + ".<br>"
+                              buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result3[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result3[i].appid + "/\">Store Page</a>)<br>"
                               break;
                             }
                             buf = buf + list_of_genres[j] + ", "
@@ -321,11 +321,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
                           buf = buf + "<b>" + result4[i].name + "</b> is a ";
                           var list_of_genres = result4[i].genres.split(";");
                           if (list_of_genres.length == 1) {
-                            buf = buf + list_of_genres[0] + " game, and is priced at $" + result4[i].price + ".<br>"
+                            buf = buf + list_of_genres[0] + " game, and is priced at $" + result4[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result4[i].appid + "/\">Store Page</a>)<br>"
                           } else {
                             for (var j = 0; j < list_of_genres.length; j++) {
                               if (j == list_of_genres.length - 1) {
-                                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result4[i].price + ".<br>"
+                                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result4[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result4[i].appid + "/\">Store Page</a>)<br>"
                                 break;
                               }
                               buf = buf + list_of_genres[j] + ", "
@@ -352,11 +352,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
                       buf = buf + "<b>" + result2[i].name + "</b> is a ";
                       var list_of_genres = result2[i].genres.split(";");
                       if (list_of_genres.length == 1) {
-                        buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ".<br>"
+                        buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result2[i].appid + "/\">Store Page</a>)<br>"
                       } else {
                         for (var j = 0; j < list_of_genres.length; j++) {
                           if (j == list_of_genres.length - 1) {
-                            buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ".<br>"
+                            buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result2[i].appid + "/\">Store Page</a>)<br>"
                             break;
                           }
                           buf = buf + list_of_genres[j] + ", "
@@ -369,11 +369,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
                         buf = buf + "<b>" + result3[i].name + "</b> is a ";
                         var list_of_genres = result3[i].genres.split(";");
                         if (list_of_genres.length == 1) {
-                          buf = buf + list_of_genres[0] + " game, and is priced at $" + result3[i].price + ".<br>"
+                          buf = buf + list_of_genres[0] + " game, and is priced at $" + result3[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result3[i].appid + "/\">Store Page</a>)<br>"
                         } else {
                           for (var j = 0; j < list_of_genres.length; j++) {
                             if (j == list_of_genres.length - 1) {
-                              buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result3[i].price + ".<br>"
+                              buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result3[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result3[i].appid + "/\">Store Page</a>)<br>"
                               break;
                             }
                             buf = buf + list_of_genres[j] + ", "
@@ -386,11 +386,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
                           buf = buf + "<b>" + result4[i].name + "</b> is a ";
                           var list_of_genres = result4[i].genres.split(";");
                           if (list_of_genres.length == 1) {
-                            buf = buf + list_of_genres[0] + " game, and is priced at $" + result4[i].price + ".<br>"
+                            buf = buf + list_of_genres[0] + " game, and is priced at $" + result4[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result4[i].appid + "/\">Store Page</a>)<br>"
                           } else {
                             for (var j = 0; j < list_of_genres.length; j++) {
                               if (j == list_of_genres.length - 1) {
-                                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result4[i].price + ".<br>"
+                                buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result4[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result4[i].appid + "/\">Store Page</a>)<br>"
                                 break;
                               }
                               buf = buf + list_of_genres[j] + ", "
@@ -415,11 +415,11 @@ function write_back_to_user(user_data, priority, to_send, nickname, id) {
                   buf = buf + "<b>" + result2[i].name + "</b> is a ";
                   var list_of_genres = result2[i].genres.split(";");
                   if (list_of_genres.length == 1) {
-                    buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ".<br>"
+                    buf = buf + list_of_genres[0] + " game, and is priced at $" + result2[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result2[i].appid + "/\">Store Page</a>)<br>"
                   } else {
                     for (var j = 0; j < list_of_genres.length; j++) {
                       if (j == list_of_genres.length - 1) {
-                        buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ".<br>"
+                        buf = buf + "and " + list_of_genres[j] + " game, and is priced at $" + result2[i].price + ". (<a href=\"http://store.steampowered.com/app/" + result2[i].appid + "/\">Store Page</a>)<br>"
                         break;
                       }
                       buf = buf + list_of_genres[j] + ", "
@@ -472,14 +472,14 @@ app.post('/recommendations', (req, res) => {
                 steam.getUserFriends(id).then(friends => {
                   insert_friends(id, friends, function() {
                     insert_friends_played_games_recursion(friends, 0, function() {
-                      dbo.collection("players").insertOne({name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname});
+                      dbo.collection("players").insertOne({name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname, friends_list:friends});
 	              result = {name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname};
                       write_back_to_user(result, req.body.priority, res, summary.nickname, id);
                     });
                   });
                 }).catch(function(error) {
-                           dbo.collection("players").insertOne({name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname});
-	                   result = {name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname};
+                           dbo.collection("players").insertOne({name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname, friends_list:[]});
+	                   result = {name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname, friends_list:[]};
                            write_back_to_user(result, req.body.priority, res, summary.nickname, id);
                          }); 
               });
@@ -493,6 +493,77 @@ app.post('/recommendations', (req, res) => {
 
         write_back_to_user(result, req.body.priority, res, result.nickname, result.steam_id);
 
+      }
+
+    });
+
+  });
+
+});
+
+// For updating steam accounts
+app.post('/mongoupdate', (req, res) => {
+
+  MongoClient.connect(url, function(err, db) {
+    if (err) throw err;
+
+    var dbo = db.db("Players");
+
+    dbo.collection("players").findOne({name:req.body.mongoupdateusername}, function(err, result) {
+
+      if (err) throw err;
+      if (!result) {
+        res.send("<h1>Record with name " + req.body.mongoupdateusername + " does not exist.</h1>");
+      } else {
+
+        steam.resolve(req.body.mongoupdateusername).then(id => {
+          steam.getUserOwnedGames(id).then(games => {
+
+            var old_games = result.games;
+            var new_games = [];
+            var new_game_appids = [];
+
+            for (var i = 0; i < games.length; i++) {
+              if (!(games[i] in old_games)) {
+                new_games.push(games[i]);
+              }
+              new_game_appids.push(games[i].appID);
+            }
+
+            insert_played_games(id, new_games, function(appids) {
+              steam.getUserSummary(id).then(summary => {
+                steam.getUserFriends(id).then(friends => {
+
+                  var old_friends = result.friends_list;
+                  var new_friends = [];
+                  var friends_list_ids = [];
+
+                  for (var i = 0; i < friends.length; i++) {
+                    if (!(friends[i] in old_friends)) {
+                      new_friends.push(friends[i]);
+                    }
+                    friends_list_ids.push(friends[i].steamID);
+                  }
+
+                  insert_friends(id, new_friends, function() {
+                    insert_friends_played_games_recursion(new_friends, 0, function() {
+                      dbo.collection("players").updateOne({name:req.body.mongoupdateusername}, {$set:{name:req.body.mongoupdateusername, steam_id:id, games:new_game_appids, nickname:summary.nickname, friends_list:friends_list_ids}});
+	              res.send("<h1>Successfully updated record.</h1>");
+                    });
+                  });
+
+                }).catch(function(error) {
+                           dbo.collection("players").updateOne({name:req.body.mongoupdateusername}, {$set:{name:req.body.mongoupdateusername, steam_id:id, games:new_game_appids, nickname:summary.nickname, friends_list:[]}});
+	                   res.send("<h1>Successfully updated record.</h1>");
+                         });                         
+              });
+            });
+            
+          }).catch(function(error) {
+                     res.send("<h1>Sorry, the requested user has their profile set to private.</h1>");
+                   });
+        });        
+	
       }
 
     });
@@ -516,18 +587,18 @@ app.post('/recommendations', (req, res) => {
 
 
 // Test raw SQL query input - NO PATH TO THIS ANYMORE
-app.post('/sql', (req, res) => {
-
-  con.query(req.body.sqlquery, function (err, result) {
-    if (err) throw err;
-    var buf = ""
-    for (var i = 0; i < result.length; i++) {
-      buf = buf + result[i].name + "<br>";
-    }
-    res.send(buf);	
-  });
-
-});
+//app.post('/sql', (req, res) => {
+//
+//  con.query(req.body.sqlquery, function (err, result) {
+//    if (err) throw err;
+//    var buf = ""
+//    for (var i = 0; i < result.length; i++) {
+//      buf = buf + result[i].name + "<br>";
+//    }
+//    res.send(buf);	
+//  });
+//
+//});
 
 
 // Test raw Mongo input
@@ -542,11 +613,11 @@ app.post('/mongo', (req, res) => {
 
       if (err) throw err;
       if (!result) {
-        dbo.collection("players").insertOne({name:req.body.mongousername, steam_id:req.body.mongosteamid, games:[parseInt(req.body.mongogameid)], nickname:req.body.mongonickname});
-        res.send("Successfully created record.");
+        dbo.collection("players").insertOne({name:req.body.mongousername, steam_id:req.body.mongosteamid, games:[parseInt(req.body.mongogameid)], nickname:req.body.mongonickname, friends_list:[]});
+        res.send("<h1>Successfully created record.</h1>");
       } else {
 	dbo.collection("players").updateOne(result, {$addToSet:{games:parseInt(req.body.mongogameid)}});
-        res.send("Successfully updated record.");
+        res.send("<h1>Successfully updated record.</h1>");
       }
 
     });
@@ -567,9 +638,9 @@ app.post('/mongodelete', (req, res) => {
 
       if (err) throw err;
       if (result.deletedCount == 0) {
-        res.send("Record with name " + req.body.mongousernamedelete + " does not exist.");
+        res.send("<h1>Record with name " + req.body.mongousernamedelete + " does not exist.</h1>");
       } else {
-        res.send("Successfully deleted record.");
+        res.send("<h1>Successfully deleted record.</h1>");
       }
 
     });
