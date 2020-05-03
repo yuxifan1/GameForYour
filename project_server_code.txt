@@ -472,7 +472,11 @@ app.post('/recommendations', (req, res) => {
                 steam.getUserFriends(id).then(friends => {
                   insert_friends(id, friends, function() {
                     insert_friends_played_games_recursion(friends, 0, function() {
-                      dbo.collection("players").insertOne({name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname, friends_list:friends});
+                      var friends_list_ids = [];
+                      for (var i = 0; i < friends.length; i++) {
+                        friends_list_ids.push(friends[i].steamID);
+                      }
+                      dbo.collection("players").insertOne({name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname, friends_list:friends_list_ids});
 	              result = {name:req.body.username, steam_id:id, games:appids, nickname:summary.nickname};
                       write_back_to_user(result, req.body.priority, res, summary.nickname, id);
                     });
